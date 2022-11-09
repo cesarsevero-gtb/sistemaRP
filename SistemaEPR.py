@@ -99,6 +99,26 @@ def excluirProduto():
     except:
         print('erro ao excluir o produto')
 
+def listarPedidos():
+    pedidos = []
+    decision = 0
+
+    try:
+        with conexao.cursor() as cursor:
+            cursor.execute('select * from pedidos')
+            pedidosCadastrados = cursor.fetchall()
+    except:
+        print('Erro ao se conectar ao banco de dados')
+    for i in pedidosCadastrados:
+        pedidos.append(i)
+
+    if len(pedidos) !=0:
+        for i in range(0, len(pedidos)):
+            print(pedidos[i])
+    else:
+        print('0 pedidos cadastrados')
+
+
 while not autentico:
     decisao = int(input('digite 1 para logar e 2 para se cadastrar'))
 
