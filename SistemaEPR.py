@@ -103,21 +103,64 @@ def listarPedidos():
     pedidos = []
     decision = 0
 
+    while decision != 2:
+        pedidos.clear()
+
+        try:
+            with conexao.cursor() as cursor:
+                cursor.execute('select * from pedidos')
+                listarPedidos = cursor.fetchall()
+
+        except:
+            print('Erro no Banco de dados')
+
+        for i in listarPedidos:
+            pedidos.append(i)
+
+
+        if len(pedidos) != 0:
+            for i in range(0, len(pedidos)):
+                print(pedidos[i])
+        else:
+            print('Nenhum pedido encontrado')
+
+        decision = int(input('Digite 1 para produto entregue ou 2 para voltar'))
+
+        if decision == 1:
+            idDeletar = int(input('Digite o id do pedido entregue'))
+
+            try:
+                with conexao.cursor() as cursor:
+                    cursor.execute('delete from pedidos where id = {}'.format(idDeletar))
+                    print('Pedido dado como entregue')
+            except:
+                print('Erro ao deletar pedido')
+
+def gerarEstatistica():
+    nomeProduto = []
+    nomeProduto.clear()
+
+    try:
+       with conexao.cursor() as cursor:
+        cursor.execute('select * fron produtos')
+        produtos = cursor.fetchall()
+
+    except:
+        print('Erro ao Gerar Estatisticas')
+
     try:
         with conexao.cursor() as cursor:
-            cursor.execute('select * from pedidos')
-            pedidosCadastrados = cursor.fetchall()
+            cursor.execute('select * from estatisticavendido')
+            vendido = cursor.fetchall()
     except:
-        print('Erro ao se conectar ao banco de dados')
-    for i in pedidosCadastrados:
-        pedidos.append(i)
+        print('Erro ao cconsultar ao banco de dados')
 
-    if len(pedidos) !=0:
-        for i in range(0, len(pedidos)):
-            print(pedidos[i])
-    else:
-        print('0 pedidos cadastrados')
+    estado = int(input('digite 0 para sair, 1 para pesquisar por nome; 2 para pesquisar por grupo'))
 
+    if estado == 1:
+        decisao3 = int(input('sigite 1 para pesquisar por dinheiro e 2 por quantidade unitaria'))
+        if decisao3 == 1:
+            pass
 
 while not autentico:
     decisao = int(input('digite 1 para logar e 2 para se cadastrar'))
@@ -142,7 +185,7 @@ if autentico:
 
 
         while decisaoUsuario != 0:
-            decisaoUsuario = int(input('Digite 0 para sair e 1 para dadastrar produto, 2 para ver produtos cadastrado'))
+            decisaoUsuario = int(input('Digite 0 para sair e 1 para dadastrar produto, 2 para ver produtos cadastrado, 3 para listar pedidos'))
 
             if decisaoUsuario == 1:
                 cadastrarProduto()
@@ -153,6 +196,9 @@ if autentico:
 
                 if delete == 1:
                     excluirProduto()
+            elif decisaoUsuario == 3:
+                listarPedidos()
+
 
     elif usuarioSupremo == False:
         decisaoMembro = 1
