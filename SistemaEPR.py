@@ -1,4 +1,4 @@
-
+import matplotlib.pyplot as plt
 import pymysql.cursors
 
 conexao = pymysql.connect(
@@ -13,6 +13,7 @@ conexao = pymysql.connect(
 
 autentico = False
 
+
 def logarCadastrar():
     usuarioExistente = 0
     autenticado = False
@@ -23,7 +24,7 @@ def logarCadastrar():
         senha = input('Digite sua senha: ')
 
         for linha in resultado:
-            if nome == linha['nome'] and senha == linha ['senha']:
+            if nome == linha['nome'] and senha == linha['senha']:
                 if linha['nivel'] == 1:
                     usuarioMaster = False
                 elif linha['nivel'] == 2:
@@ -41,7 +42,7 @@ def logarCadastrar():
         senha = input('Digite sua senha: ')
 
         for linha in resultado:
-            if nome == linha['nome'] and senha == linha ['senha']:
+            if nome == linha['nome'] and senha == linha['senha']:
                 usuarioExistente = 1
 
         if usuarioExistente == 1:
@@ -55,7 +56,8 @@ def logarCadastrar():
             except:
                 print('Erro ao inserir os dados no banco de dados')
 
-    return  autenticado, usuarioMaster
+    return autenticado, usuarioMaster
+
 
 def cadastrarProduto():
     nome = input('Digite o nome do produto')
@@ -64,11 +66,13 @@ def cadastrarProduto():
     preco = float(input('Digite o valor do produto'))
     try:
         with conexao.cursor() as cursor:
-            cursor.execute('insert into produtos (nome, ingredientes, grupo, preco) values (%s, %s, %s, %s)',(nome, ingrediente, grupo, preco))
+            cursor.execute('insert into produtos (nome, ingredientes, grupo, preco) values (%s, %s, %s, %s)',
+                           (nome, ingrediente, grupo, preco))
             conexao.commit()
             print('Produto cadastrado com sucesso')
     except:
-            print('Erro ao cadastrar produto')
+        print('Erro ao cadastrar produto')
+
 
 def listarProduto():
     produto = []
@@ -90,6 +94,7 @@ def listarProduto():
     else:
         print('Nenhum produto cadastrado')
 
+
 def excluirProduto():
     idDeletar = int(input('Digite o ID do produtos que deseja deletar'))
 
@@ -98,6 +103,7 @@ def excluirProduto():
             cursor.execute('delete from produtos where id = {}'.format(idDeletar))
     except:
         print('erro ao excluir o produto')
+
 
 def listarPedidos():
     pedidos = []
@@ -117,7 +123,6 @@ def listarPedidos():
         for i in listarPedidos:
             pedidos.append(i)
 
-
         if len(pedidos) != 0:
             for i in range(0, len(pedidos)):
                 print(pedidos[i])
@@ -136,21 +141,22 @@ def listarPedidos():
             except:
                 print('Erro ao deletar pedido')
 
+
 def gerarEstatistica():
-    nomeProduto = []
-    nomeProduto.clear()
+    nomeProdutos = []
+    nomeProdutos.clear()
 
     try:
-       with conexao.cursor() as cursor:
-        cursor.execute('select * fron produtos')
-        produtos = cursor.fetchall()
+        with conexao.cursor() as cursor:
+            cursor.execute('select * from produtos')
+            produtos = cursor.fetchall()
 
     except:
         print('Erro ao Gerar Estatisticas')
 
     try:
         with conexao.cursor() as cursor:
-            cursor.execute('select * from estatisticavendido')
+            cursor.execute('select * from estatisticaVendido')
             vendido = cursor.fetchall()
     except:
         print('Erro ao cconsultar ao banco de dados')
@@ -158,9 +164,132 @@ def gerarEstatistica():
     estado = int(input('digite 0 para sair, 1 para pesquisar por nome; 2 para pesquisar por grupo'))
 
     if estado == 1:
-        decisao3 = int(input('sigite 1 para pesquisar por dinheiro e 2 por quantidade unitaria'))
+        decisao3 = int(input('digite 1 para pesquisar por dinheiro e 2 por quantidade unitaria'))
         if decisao3 == 1:
-            pass
+
+            for i in produtos:
+                nomeProdutos.append(i['nome'])
+            valores = []
+            valores.clear()
+
+            for h in range(0, len(nomeProdutos)):
+                somaValor = -1
+                for i in vendido:
+                    if i['nome'] == nomeProdutos[h]:
+                        somaValor += i['preco']
+                if somaValor == -1:
+                    valores.append(0)
+                elif somaValor > 0:
+                    valores.append(somaValor + 1)
+
+            plt.plot(nomeProdutos, valores)
+            plt.ylabel('Quantidade vendida em reais')
+            plt.xlabel('Produtos')
+            plt.show()
+        if decisao3 == 2:
+            grupoUnico = []
+            grupoUnico.clear()
+
+            try:
+                with conexao.cursor() as cursor:
+                    cursor.execute('select * from produtos')
+                    grupo = cursor.fetchall()
+
+            except:
+                print('Erro na consulta')
+
+            try:
+                with conexao.cursor() as cursor:
+                    cursor.execute('select * from statisticaVendido')
+                    vendidoGrupo = cursor.fetchall()
+
+            except:
+                print('Erro ao consultar estatisticas')
+
+            for i in grupo:
+                grupoUnico.append(i['nome'])
+
+            grupoUnico = sorted(set(grupoUnico))
+
+            qntFinal = []
+            qntFinal.clear()
+
+            for h in range(0, len(grupoUnico)):
+                qntUnitaria = 0
+                for i in vendidoGrupo:
+                    if grupoUnico[h] == i['nome']:
+                        qntUnitaria += 1
+                qntFinal.append(qntUnitaria)
+
+            plt.plot(grupoUnico, qntFinal)
+            plt.ylabel('quantidade unitaria vendida')
+            plt.xlabel('produtos')
+            plt.show()
+
+    elif estado == 2:
+        decisao3 = int(input('digite 1 para pesquisar por dinheiro e 2 por quantidade unitaria'))
+        if decisao3 == 1:
+
+            for i in produtos:
+                nomeProdutos.append(i['grupo'])
+            valores = []
+            valores.clear()
+
+            for h in range(0, len(nomeProdutos)):
+                somaValor = -1
+                for i in vendido:
+                    if i['grupo'] == nomeProdutos[h]:
+                        somaValor += i['preco']
+                if somaValor == -1:
+                    valores.append(0)
+                elif somaValor > 0:
+                    valores.append(somaValor + 1)
+
+            plt.plot(nomeProdutos, valores)
+            plt.ylabel('Quantidade vendida em reais')
+            plt.xlabel('Produtos')
+            plt.show()
+
+        if decisao3 == 2:
+            grupoUnico = []
+            grupoUnico.clear()
+
+            try:
+                with conexao.cursor() as cursor:
+                    cursor.execute('select * from produtos')
+                    grupo = cursor.fetchall()
+
+            except:
+                print('Erro na consulta')
+
+            try:
+                with conexao.cursor() as cursor:
+                    cursor.execute('select * from statisticaVendido')
+                    vendidoGrupo = cursor.fetchall()
+
+            except:
+                print('Erro ao consultar estatisticas')
+
+            for i in grupo:
+                grupoUnico.append(i['grupo'])
+
+            grupoUnico = sorted(set(grupoUnico))
+
+            qntFinal = []
+            qntFinal.clear()
+
+            for h in range(0, len(grupoUnico)):
+                qntUnitaria = 0
+                for i in vendidoGrupo:
+                    if grupoUnico[h] == i['grupo']:
+                        qntUnitaria += 1
+                qntFinal.append(qntUnitaria)
+
+            plt.plot(grupoUnico, qntFinal)
+            plt.ylabel('quantidade unitaria vendida')
+            plt.xlabel('produtos')
+            plt.show()
+
 
 while not autentico:
     decisao = int(input('digite 1 para logar e 2 para se cadastrar'))
@@ -172,7 +301,7 @@ while not autentico:
 
 
     except:
-      print('erro ao se conectar ao banco de dados')
+        print('erro ao se conectar ao banco de dados')
 
     autentico, usuarioSupremo = logarCadastrar()
 
@@ -182,10 +311,9 @@ if autentico:
     if usuarioSupremo == True:
         decisaoUsuario = 1
 
-
-
         while decisaoUsuario != 0:
-            decisaoUsuario = int(input('Digite 0 para sair e 1 para dadastrar produto, 2 para ver produtos cadastrado, 3 para listar pedidos'))
+            decisaoUsuario = int(input(
+                'Digite 0 para sair e 1 para dadastrar produto, 2 para ver produtos cadastrado, 3 para listar pedidos e 4 para visualizar as estatísticas'))
 
             if decisaoUsuario == 1:
                 cadastrarProduto()
@@ -198,12 +326,14 @@ if autentico:
                     excluirProduto()
             elif decisaoUsuario == 3:
                 listarPedidos()
+            elif decisaoUsuario == 4:
+                gerarEstatistica()
 
 
     elif usuarioSupremo == False:
         decisaoMembro = 1
 
-        while decisaoMembro !=0:
+        while decisaoMembro != 0:
             decisaoMembro = int(input('Digite 0 para sair ou digite 1 para ver produtos listado'))
 
             if decisaoMembro == 1:
